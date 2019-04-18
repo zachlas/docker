@@ -13,145 +13,26 @@
 #::          docker run -it --rm --name python_test -v "%hostDir%":/usr/src/myapp -w /usr/src/myapp arm32v7/python:3 python hello_world_python.py
 
 
+DESKTOP=
+ARM32="--platform linux/arm"
+ARM64="--platform linux/arm64"
 
 
-
-
-
-from subprocess import Popen, PIPE, STDOUT
-import csv   
-
-
-
-def get_platform_syntax(arch):
-    if (arch=="x86"):
-        platform=""
-    elif arch=="arm32" or arch=="arm" or arch=="arm32v7":
-        platform="--platform linux/arm"
-    elif arch=="arm64" or arch=="aarch64" or arch=="arm64v8":
-        platform="--platform linux/arm64"
-
-    return platform
-
-
-
-def docker_rmi(image,arch):
-    cmd="docker rmi -f %s" %image
-    p = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE)
-    stdout, stderr = p.communicate()    # doesn't return until process is done
-    if (p.returncode==0):
-        # See if no image exists
-        if ("No such image" in stderr):
-            print "______Docker rmi %s inaction: image does not exist." %image
-            return True
-        else:
-            print "______Docker rmi %s removed" %image
-            return True
-    else:
-        print "!"*100
-        print "______Docker rmi %s error:" %image
-        print stderr
-        return False
-
-
-
-def docker_pull(image,arch):
-    platform = get_platform_syntax(arch)
-
-    cmd="docker pull %s %s" %(platform,image)
-    p = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE)
-    stdout, stderr = p.communicate()    # doesn't return until process is done
-    if(p.returncode==0):
-        print "______Docker pull %s success" %image
-        return True,cmd
-    else:
-        print "!"*100
-        print "______Docker pull %s error:" %image
-        print "Command: %s" %cmd
-        print stderr
-        return False,cmd
-
-
-def docker_run(image,arch,options):
-    platform = get_platform_syntax(arch)
-
-    cmd="docker run %s %s %s" %(platform,image,options)
-    p = Popen(cmd, shell=True, stdout=PIPE, stderr=PIPE)
-    stdout, stderr = p.communicate()    # doesn't return until process is done
-    if(p.returncode==0
-        ):
-        print "______Docker run %s success. Output:" %image
-        print stdout
-        return True,cmd
-    else:
-        print "!"*100
-        print "______Docker run %s error:" %image
-        print "Command: %s" %cmd
-        print stderr
-        return False,cmd
-
-
-
-
-def log_arch_run(csv_log,data):
-    with open(csv_log, 'a') as f:
-        writer = csv.writer(f)
-        writer.writerow(data)
-
-
-
-
-
-csv_log="docker_run_log.csv"
-# (image,cmd_to_run)
-tests = [  ("hello-world",""),
-            ("node:alpine","uname -a"),
-            ("python:2-alpine",'python -c "import platform; print platform.machine()"'),
-            ("python:3-alpine",'python -c "import platform; print(platform.machine())"'),
-            ("openjdk:alpine","uname -a"),
-            ("gcc","uname -a"),
-            ("ruby:alpine","uname -a"),
-            ("rust:slim","uname -a"),
-            ("mcr.microsoft.com/dotnet/core/samples","uname -a"),
-            ("golang:alpine","uname -a"),
-            ("php:alpine","php --version")
-         ]
-
-
-
-log_arch_run(csv_log,["Image","Arch","Execution Commands","Pull Status","Run Status","Pull Command","Run Command"])
-for run in tests:
-    image=run[0]
-    options=run[1]
-    print "="*100
-    for arch in ["x86","arm32","arm64"]:
-        print "_"*70
-        docker_rmi(image,arch)
-        pull_status,pull_cmd = docker_pull(image,arch)
-        run_status,run_cmd = docker_run(image,arch,options)
-        docker_rmi(image,arch)
-
-        log_arch_run(csv_log,[image,arch,options,pull_status,run_status,pull_cmd,run_cmd])
-        
-
-
-
-
-
-
-
-
-
-#docker pull $DESKTOP hello-world
-#docker run $DESKTOP -it --rm --name hello hello-world
-#docker rmi hello-world
-
-
-
-
-'''
 ## declare an array variable
 declare -a images=("hello-world" 
+                "node:alpine"
+                "python:2-alpine"
+                "python:3-alpine"
+                "openjdk:alpine"
+                "gcc"
+                "ruby:alpine"
+                "rust:slim"
+                "mcr.microsoft.com/dotnet/core/samples"
+                "golang:alpine"
+                "php:alpine"
+                )
+
+declare -a commands=("hello-world" 
                 "node:alpine"
                 "python:2-alpine"
                 "python:3-alpine"
@@ -173,8 +54,6 @@ do
 done
 
 # You can access them using echo "${arr[0]}", "${arr[1]}" also
-'''
-
 
 
 
